@@ -1,0 +1,22 @@
+{
+  "name": "server",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "npm run test"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/mayamessinger/LinguisticsDB-server.git"
+  },
+  "author": "Maya Messinger <maya.messinger@duke.edu>",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/mayamessinger/LinguisticsDB-server/issues"
+  },
+  "homepage": "https://github.com/mayamessinger/LinguisticsDB-server#readme",
+  "dependencies": {
+    "tedious": "^3.0.1"
+  }
+}
