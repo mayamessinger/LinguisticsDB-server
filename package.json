@@ -17,6 +17,7 @@
   },
   "homepage": "https://github.com/mayamessinger/LinguisticsDB-server#readme",
   "dependencies": {
+    "ngrok": "^3.1.0",
     "tedious": "^3.0.1"
   }
 }
