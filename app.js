@@ -7,6 +7,11 @@ require("dotenv").config();
 
 app.use(bodyParser.urlencoded({extended:true}));
 app.use(bodyParser.json());
+app.use(function(req, res, next) {
+  res.header("Access-Control-Allow-Origin", "*");
+  res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept");
+  next();
+});
 
 var connectionString = "postgresql://" + process.env.PSQL_USERNAME + ":" + process.env.PSQL_PASSWORD +
 							"@" + process.env.PSQL_IP + ":" + process.env.PSQL_SOCKET + "/" + process.env.PSQL_DB;
@@ -18,8 +23,7 @@ pgClient.connect();
 
 app.post("/", (req, pres) => {
 	let st = req.body.searchText;
-	// let sf = req.body.searchField;
-	let sf = "Title";
+	let sf = req.body.searchField;
 
 	if (sf === "Title")	{
 		pgClient.query("SELECT * FROM (SELECT * FROM Books WHERE Title LIKE '%" + st + "%') AS info \
