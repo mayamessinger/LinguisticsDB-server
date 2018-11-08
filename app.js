@@ -1,4 +1,6 @@
+// const https = require("https");
 const express = require("express");
+// const fs = require("fs");
 const bodyParser = require("body-parser");
 const app = express();
 const port = 3001;
@@ -12,6 +14,11 @@ app.use(function(req, res, next) {
   res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept");
   next();
 });
+
+// var sslOptions = {
+// 	key: fs.readFileSync('./../key.pem'),
+// 	cert: fs.readFileSync('./../certificate.pem')
+// }
 
 var connectionString = "postgresql://" + process.env.PSQL_USERNAME + ":" + process.env.PSQL_PASSWORD +
 							"@" + process.env.PSQL_IP + ":" + process.env.PSQL_SOCKET + "/" + process.env.PSQL_DB;
@@ -32,6 +39,7 @@ app.post("/", (req, pres) => {
 		  	pres.send(err);
 		  }
 		  else	{
+		  	console.log(res.rows);
 		  	pres.send(res.rows);	// .uid, .title, etc. to access columns
 		  }
 		});
@@ -106,4 +114,5 @@ app.post("/", (req, pres) => {
 	}
 });
 
+// https.createServer(sslOptions, app).listen(port);
 app.listen(port, () => console.log(`Server running on port ${port}!`));
