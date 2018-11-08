@@ -53,7 +53,7 @@ app.post("/", (req, pres) => {
 			st = stt;
 		}
 
-		pgClient.query("SELECT * FROM (SELECT uid FROM Writes WHERE name LIKE '%" + st + "%') AS info \
+		pgClient.query("SELECT * FROM (SELECT * FROM Writes WHERE name LIKE '%" + st + "%') AS info \
 						JOIN Books ON info.uid = Books.uid;", (err, res) => {
 		  if (err)	{
 		  	pres.send(err);

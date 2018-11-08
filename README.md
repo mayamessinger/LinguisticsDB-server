@@ -6,7 +6,7 @@ To reboot service:
 sudo systemctl stop lingserv
 sudo systemctl daemon-reload
 sudo systemctl enable lingserv.service
-sudo systemctl stop lingserv
+sudo systemctl start lingserv
 
 To run server at reachable IP address:
 screen -d -m ngrok http 3001 -subdomain=linguisticdb
