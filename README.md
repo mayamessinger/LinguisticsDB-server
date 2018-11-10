@@ -1,6 +1,7 @@
 # LinguisticsDB-server
 Instructions for running on the VM:
-location of service file that allows constant running (won't stop when shell exits: /etc/systemd/system/lingserv.service
+file that runs node constantly: /etc/systemd/system/lingserv.service
+file that runs ngrok at url constantly: /etc/systemd/system/ngrokserver.service
 
 To reboot service:
 sudo systemctl stop lingserv
@@ -9,4 +10,7 @@ sudo systemctl enable lingserv.service
 sudo systemctl start lingserv
 
 To run server at reachable IP address:
-screen -d -m ngrok http 3001 -subdomain=linguisticdb
+sudo systemctl stop ngrokserver
+sudo systemctl daemon-reload
+sudo systemctl enable ngrokserver.service
+sudo systemctl start ngrokserver
