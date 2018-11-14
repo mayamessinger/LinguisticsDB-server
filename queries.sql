@@ -21,6 +21,7 @@
   ---------------------------------------------------
  -- 				 CLEANING THE DB			  --
  ---------------------------------------------------
+--  TO DO:
 -- code to remove books that are anomalies by words per sentence
 
 
@@ -64,12 +65,6 @@ from commonwords
 group by word
 order by sum(wordcount) desc;
 
--- to show the most popular words in a particular book
-select word, frequency
-from commonwords
-where uid=''
-order by frequency desc;
-
 -- AUTHORSSIMILIARITY
 -- authors that are the most similiar by lda_score
 select author1, author2, lda_score
@@ -98,7 +93,10 @@ order by download.desc;
 
 -- SEQUENCES
 -- most popular sequences
+select 
+from sequences
 
+-- TO DO:
 -- userratings
 -- books with the best ratings
 
@@ -151,3 +149,9 @@ and downloads.uid=books.uid
 and authors.name='Austen, Jane'
 and date_published > '2000' and date_published < '2015'
 order by download desc;
+
+-- to show the most popular words in Pride and Prejudice
+select word, frequency
+from commonwords
+where uid='42671'
+order by frequency desc;
