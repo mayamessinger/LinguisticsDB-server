@@ -62,7 +62,9 @@ where uid=''
 order by frequency desc;
 
 -- authorsimilarity
--- authors that are the most similiar
+-- authors that are the most similiar by lda_score
+
+-- authors that are the most similiar by cosine similarity
 
 -- cosinesimilarity
 -- books that are the most similar
