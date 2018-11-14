@@ -17,37 +17,46 @@
 
  */
 
+
+  ---------------------------------------------------
+ -- 				 CLEANING THE DB			  --
+ ---------------------------------------------------
+-- code to remove books that are anomalies by words per sentence
+
+
+
+
  ---------------------------------------------------
  -- 				 STATISTICS					  --
  ---------------------------------------------------
 
--- Author stats
+-- AUTHOR
 select count(*), avg(birthdate), min(birthdate), max(birthdate)
 from authors;
 
--- Book stats
+-- BOOKS
 select count(*), min(date_published), max(date_published)
 from books;
 
--- Bookwordaggregates stats per_sentence
-select count(*), avg(per_sentence), min(per_sentence), max(per_sentence)
-from bookwordaggregates;
-
+-- BOOKWORDAGGREGATES 
 /*
 There are some weird books in the dataset, such as the following:
 -- remove books 4656 and 48768 because they are not really readable and as a result have too many words per sentence (greek characters etc)
 -- remove 44663, 44662, 44661, 44799 because they are illustrations (per_sentence is one or two)
 */
+-- per_sentence
+select count(*), avg(per_sentence), min(per_sentence), max(per_sentence)
+from bookwordaggregates;
 
--- Bookwordaggregates stats avg_word_length
+-- avg_word_length
 select count(*), avg(avg_word_length), min(avg_word_length), max(avg_word_length)
 from bookwordaggregates;
 
--- Bookwordaggregates stats total_count
+-- total_count
 select count(*), avg(total_count), min(total_count), max(total_count)
 from bookwordaggregates;
 
--- Commonwords stats
+-- COMMONWORDS
 -- wordcount is in new version of schema
 -- to show the most popular words in our database
 select word, sum(wordcount)
@@ -61,18 +70,33 @@ from commonwords
 where uid=''
 order by frequency desc;
 
--- authorsimilarity
+-- AUTHORSSIMILIARITY
 -- authors that are the most similiar by lda_score
+select author1, author2, lda_score
+from authorsimilarity
+order by lda_score desc;
 
 -- authors that are the most similiar by cosine similarity
+select author1, author2, cos_similarity
+from authorsimilarity
+order by cos_similarity desc;
 
--- cosinesimilarity
+-- COSINESIMILARITY
 -- books that are the most similar
+select b1.title, b2.title, cos_similarity
+from cosinesimilarity, books as b1, books as b2
+where cosinesimilarity.uid1 = b1.uid
+and cosinesimilarity.uid2 = b2.uid
+order by cos_similarity desc;
 
--- downloads
+-- DOWNLOADS
 -- most popular books by downloads
+select title, download
+from downloads, books
+where downloads.uid=books.uid
+order by download.desc;
 
--- sequences
+-- SEQUENCES
 -- most popular sequences
 
 -- userratings
