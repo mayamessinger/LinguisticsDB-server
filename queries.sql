@@ -21,6 +21,9 @@
   ---------------------------------------------------
  -- 				 CLEANING THE DB			  --
  ---------------------------------------------------
+ -- this section is intended to remove data items that are anomalies, 
+ -- or are unusable in some way, or irrelevant in some way
+ 
 --  TO DO:
 -- code to remove books that are anomalies by words per sentence
 
@@ -30,6 +33,7 @@
  ---------------------------------------------------
  -- 				 STATISTICS					  --
  ---------------------------------------------------
+-- this section is intended for the "Statistics" page of the website
 
 -- AUTHOR
 select count(*), avg(birthdate), min(birthdate), max(birthdate)
@@ -116,6 +120,8 @@ from sequences
  ---------------------------------------------------
  -- 				 QUERIES					  --
  ---------------------------------------------------
+ -- this section is intended for the search and advanced search
+ -- features of the website
 
 -- Dispay the list of authors' names, ordered by last name
 select name 
