@@ -23,7 +23,7 @@
  ---------------------------------------------------
  -- this section is intended to remove data items that are anomalies, 
  -- or are unusable in some way, or irrelevant in some way
- 
+
 --  TO DO:
 -- code to remove books that are anomalies by words per sentence
 
@@ -97,25 +97,51 @@ order by download.desc;
 
 -- SEQUENCES
 -- most popular sequences
-select 
+select word, next_word, sum(times_appear)
 from sequences
+group by word, next_word
+order by sum(times_appear) desc;
 
 -- TO DO:
--- userratings
--- books with the best ratings
+-- USERRATINGS
+-- books with the best average ratings
+select title, avg(rating)
+from userratings, books
+where userratings.book_id=books.uid
+group by uid
+order by avg(rating) desc;
 
--- number of ratings (count)
+-- books with the most ratings
+select title, count(*)
+from userratings, books
+where userratings.book_id=books.uid
+group by uid
+order by count(*) desc;
 
--- userreview
+-- number of ratings on website (count)
+select count(*)
+from userratings;
+
+-- USERREVIEW
 -- books with the most user reviews
+select title, count(*)
+from books, userreview
+where books.uid=userreview.book_id
+group by uid
+order by count(*) desc;
 
 -- number of user reviews (count)
+select count(*)
+from userreview;
 
--- users
--- number of users (count)
+-- USERS
+-- number of users on website (count)
+select count(*)
+from users;
 
--- writes
--- books per author (min, max, avg)
+-- WRITES
+-- TODO: books per author (min, max, avg)
+
 
  ---------------------------------------------------
  -- 				 QUERIES					  --
