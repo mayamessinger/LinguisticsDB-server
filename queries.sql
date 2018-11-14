@@ -141,6 +141,10 @@ from users;
 
 -- WRITES
 -- TODO: books per author (min, max, avg)
+select min(count), max(count), avg(count)
+from (select name, count(uid)
+		from writes
+		group by name);
 
 
  ---------------------------------------------------
