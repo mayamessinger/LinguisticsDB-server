@@ -17,19 +17,6 @@
 
  */
 
-
-  ---------------------------------------------------
- -- 				 CLEANING THE DB			  --
- ---------------------------------------------------
- -- this section is intended to remove data items that are anomalies, 
- -- or are unusable in some way, or irrelevant in some way
-
---  TO DO:
--- code to remove books that are anomalies by words per sentence
-
-
-
-
  ---------------------------------------------------
  -- 				 STATISTICS					  --
  ---------------------------------------------------
@@ -44,11 +31,6 @@ select count(*), min(date_published), max(date_published)
 from books;
 
 -- BOOKWORDAGGREGATES 
-/*
-There are some weird books in the dataset, such as the following:
--- remove books 4656 and 48768 because they are not really readable and as a result have too many words per sentence (greek characters etc)
--- remove 44663, 44662, 44661, 44799 because they are illustrations (per_sentence is one or two)
-*/
 -- per_sentence
 select count(*), avg(per_sentence), min(per_sentence), max(per_sentence)
 from bookwordaggregates;
@@ -102,7 +84,6 @@ from sequences
 group by word, next_word
 order by sum(times_appear) desc;
 
--- TO DO:
 -- USERRATINGS
 -- books with the best average ratings
 select title, avg(rating)
@@ -144,7 +125,20 @@ from users;
 select min(count), max(count), avg(count)
 from (select name, count(uid)
 		from writes
-		group by name);
+		group by name) as f1;
+
+select *
+from (select name, count(uid)
+		from writes
+		group by name) as f1
+where count>100;
+
+/*
+remove:
+Various
+unknown
+Anonymous
+*/
 
 
  ---------------------------------------------------
