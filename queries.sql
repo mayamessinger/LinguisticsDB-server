@@ -23,16 +23,32 @@
 -- this section is intended for the "Statistics" page of the website
 
 -- AUTHOR
-select count(*), avg(birthdate), min(birthdate), max(birthdate)
+select count(*),
+min(birthdate), 
+percentile_cont(0.05) within group (order by birthdate asc) as percentile_05,
+percentile_cont(0.25) within group (order by birthdate asc) as percentile_25,
+percentile_cont(0.50) within group (order by birthdate asc) as median,
+avg(birthdate), 
+percentile_cont(0.75) within group (order by birthdate asc) as percentile_75,
+percentile_cont(0.95) within group (order by birthdate asc) as percentile_95,
+max(birthdate)
 from authors;
 
 -- BOOKS
-select count(*), min(date_published), max(date_published)
+select count(*), min(date_published), max(date_published),
 from books;
 
 -- BOOKWORDAGGREGATES 
 -- per_sentence
-select count(*), avg(per_sentence), min(per_sentence), max(per_sentence)
+select count(*), 
+min(per_sentence), 
+percentile_cont(0.05) within group (order by per_sentence asc) as percentile_05,
+percentile_cont(0.25) within group (order by per_sentence asc) as percentile_25,
+percentile_cont(0.50) within group (order by per_sentence asc) as median,
+avg(per_sentence), 
+percentile_cont(0.75) within group (order by per_sentence asc) as percentile_75,
+percentile_cont(0.95) within group (order by per_sentence asc) as percentile_95,
+max(per_sentence)
 from bookwordaggregates;
 
 -- avg_word_length
