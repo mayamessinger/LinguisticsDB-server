@@ -6,7 +6,15 @@
 
  --- ADVANCED SEARCH QUERY
 
-SELECT *
+SELECT books.uid, books.title, books.date_published, books.link_to_book, 
+authors.name, authors.birthdate,
+authorsimilarity.author2, authorsimilarity.cos_similarity,
+bookwordaggregates.per_sentence, bookwordaggregates.total_count, bookwordaggregates.avg_word_length,
+commonwords.word, commonwords.frequency,
+cosinesimilarity.uid2, cosinesimilarity.cos_similarity,
+downloads.download,
+userratings.username, userratings.rating, userratings.timestamp,
+userreview.review, userreview.timestamp
 FROM books
 FULL OUTER JOIN writes ON books.uid = writes.uid
 FULL OUTER JOIN authors ON authors.name = writes.name
@@ -15,17 +23,16 @@ FULL OUTER JOIN bookwordaggregates ON books.uid = bookwordaggregates.uid
 FULL OUTER JOIN commonwords ON books.uid=commonwords.uid
 FULL OUTER JOIN cosinesimilarity ON books.uid=cosinesimilarity.uid1
 FULL OUTER JOIN downloads ON books.uid = downloads.uid
-FULL OUTER JOIN sequences ON books.uid = sequences.uid
 FULL OUTER JOIN userratings ON books.uid = userratings.book_id
 FULL OUTER JOIN userreview ON books.uid = userreview.book_id
-FULL OUTER JOIN users ON users.username = userreview.username 
 and userreview.username = userratings.username
 where books.uid= 33409;
 
-  uid  |                          title                          | date_published |             link_to_book              |  uid  |         name         |         name         | birthdate | author1 | author2 | lda_score | cos_similarity |  uid  | per_sentence | total_count | avg_word_length | uid | word | frequency | uid1 | uid2 | cos_similarity | uid | download | uid | word | next_word | times_appear | username | book_id | rating | timestamp | username | book_id | review | timestamp | username | email | password 
--------+---------------------------------------------------------+----------------+---------------------------------------+-------+----------------------+----------------------+-----------+---------+---------+-----------+----------------+-------+--------------+-------------+-----------------+-----+------+-----------+------+------+----------------+-----+----------+-----+------+-----------+--------------+----------+---------+--------+-----------+----------+---------+--------+-----------+----------+-------+----------
- 33409 | The Ranch Girls at Rainbow Lodge The Ranch Girls Series | 2010-08-11     | http://www.gutenberg.org/ebooks/33409 | 33409 | Vandercook, Margaret | Vandercook, Margaret |      1876 |         |         |           |                | 33409 |      14.3207 |       58527 |          4.4062 |     |      |           |      |      |                |     |          |     |      |           |              |          |         |        |           |          |         |        |           |          |       | 
+  uid  |                          title                          | date_published |             link_to_book              |         name         | birthdate | author2 | cos_similarity | per_sentence | total_count | avg_word_length | word | frequency | uid2 | cos_similarity | download | username | rating | timestamp | review | timestamp 
+-------+---------------------------------------------------------+----------------+---------------------------------------+----------------------+-----------+---------+----------------+--------------+-------------+-----------------+------+-----------+------+----------------+----------+----------+--------+-----------+--------+-----------
+ 33409 | The Ranch Girls at Rainbow Lodge The Ranch Girls Series | 2010-08-11     | http://www.gutenberg.org/ebooks/33409 | Vandercook, Margaret |      1876 |         |                |      14.3207 |       58527 |          4.4062 |      |           |      |                |          |          |        |           |        |          
 (1 row)
+
 
 
 -- Dispay the list of authors' names, ordered by last name
