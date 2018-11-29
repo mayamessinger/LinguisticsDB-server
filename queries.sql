@@ -6,15 +6,8 @@
 
  --- ADVANCED SEARCH QUERY
 
-SELECT books.uid, books.title, books.date_published, books.link_to_book, 
-authors.name, authors.birthdate,
-authorsimilarity.author2, authorsimilarity.cos_similarity,
-bookwordaggregates.per_sentence, bookwordaggregates.total_count, bookwordaggregates.avg_word_length,
-commonwords.word, commonwords.frequency,
-cosinesimilarity.uid2, cosinesimilarity.cos_similarity,
-downloads.download,
-userratings.username, userratings.rating, userratings.timestamp,
-userreview.review, userreview.timestamp
+SELECT books.title, books.link_to_book, 
+authors.name, bookwordaggregates.total_count
 FROM books
 FULL OUTER JOIN writes ON books.uid = writes.uid
 FULL OUTER JOIN authors ON authors.name = writes.name
