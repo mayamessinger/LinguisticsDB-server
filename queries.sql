@@ -1,167 +1,32 @@
-/* List of relations
- Schema |        Name        | Type  |  Owner   
---------+--------------------+-------+----------
- public | authors            | table | postgres
- public | authorsimilarity   | table | postgres
- public | books              | table | postgres
- public | bookwordaggregates | table | postgres
- public | commonwords        | table | postgres
- public | cosinesimilarity   | table | postgres
- public | downloads          | table | postgres
- public | sequences          | table | postgres
- public | userratings        | table | postgres
- public | userreview         | table | postgres
- public | users              | table | postgres
- public | writes             | table | postgres
-(12 rows)
-
- */
-
- ---------------------------------------------------
- -- 				 STATISTICS					  --
- ---------------------------------------------------
--- this section is intended for the "Statistics" page of the website
-
--- AUTHOR
-select count(*),
-min(birthdate), 
-percentile_cont(0.05) within group (order by birthdate asc) as percentile_05,
-percentile_cont(0.25) within group (order by birthdate asc) as percentile_25,
-percentile_cont(0.50) within group (order by birthdate asc) as median,
-avg(birthdate), 
-percentile_cont(0.75) within group (order by birthdate asc) as percentile_75,
-percentile_cont(0.95) within group (order by birthdate asc) as percentile_95,
-max(birthdate)
-from authors;
-
--- BOOKS
-select count(*), min(date_published), max(date_published),
-from books;
-
--- BOOKWORDAGGREGATES 
--- per_sentence
-select count(*), 
-min(per_sentence), 
-percentile_cont(0.05) within group (order by per_sentence asc) as percentile_05,
-percentile_cont(0.25) within group (order by per_sentence asc) as percentile_25,
-percentile_cont(0.50) within group (order by per_sentence asc) as median,
-avg(per_sentence), 
-percentile_cont(0.75) within group (order by per_sentence asc) as percentile_75,
-percentile_cont(0.95) within group (order by per_sentence asc) as percentile_95,
-max(per_sentence)
-from bookwordaggregates;
-
--- avg_word_length
-select count(*), avg(avg_word_length), min(avg_word_length), max(avg_word_length)
-from bookwordaggregates;
-
--- total_count
-select count(*), avg(total_count), min(total_count), max(total_count)
-from bookwordaggregates;
-
--- COMMONWORDS
--- wordcount is in new version of schema
--- to show the most popular words in our database
-select word, sum(wordcount)
-from commonwords
-group by word
-order by sum(wordcount) desc;
-
--- AUTHORSSIMILIARITY
--- authors that are the most similiar by lda_score
-select author1, author2, lda_score
-from authorsimilarity
-order by lda_score desc;
-
--- authors that are the most similiar by cosine similarity
-select author1, author2, cos_similarity
-from authorsimilarity
-order by cos_similarity desc;
-
--- COSINESIMILARITY
--- books that are the most similar
-select b1.title, b2.title, cos_similarity
-from cosinesimilarity, books as b1, books as b2
-where cosinesimilarity.uid1 = b1.uid
-and cosinesimilarity.uid2 = b2.uid
-order by cos_similarity desc;
-
--- DOWNLOADS
--- most popular books by downloads
-select title, download
-from downloads, books
-where downloads.uid=books.uid
-order by download.desc;
-
--- SEQUENCES
--- most popular sequences
-select word, next_word, sum(times_appear)
-from sequences
-group by word, next_word
-order by sum(times_appear) desc;
-
--- USERRATINGS
--- books with the best average ratings
-select title, avg(rating)
-from userratings, books
-where userratings.book_id=books.uid
-group by uid
-order by avg(rating) desc;
-
--- books with the most ratings
-select title, count(*)
-from userratings, books
-where userratings.book_id=books.uid
-group by uid
-order by count(*) desc;
-
--- number of ratings on website (count)
-select count(*)
-from userratings;
-
--- USERREVIEW
--- books with the most user reviews
-select title, count(*)
-from books, userreview
-where books.uid=userreview.book_id
-group by uid
-order by count(*) desc;
-
--- number of user reviews (count)
-select count(*)
-from userreview;
-
--- USERS
--- number of users on website (count)
-select count(*)
-from users;
-
--- WRITES
--- TODO: books per author (min, max, avg)
-select min(count), max(count), avg(count)
-from (select name, count(uid)
-		from writes
-		group by name) as f1;
-
-select *
-from (select name, count(uid)
-		from writes
-		group by name) as f1
-where count>100;
-
-/*
-remove:
-Various
-unknown
-Anonymous
-*/
-
-
  ---------------------------------------------------
  -- 				 QUERIES					  --
  ---------------------------------------------------
  -- this section is intended for the search and advanced search
  -- features of the website
+
+ --- ADVANCED SEARCH QUERY
+
+SELECT *
+FROM books
+FULL OUTER JOIN writes ON books.uid = writes.uid
+FULL OUTER JOIN authors ON authors.name = writes.name
+FULL OUTER JOIN authorsimilarity ON authors.name=authorsimilarity.author1
+FULL OUTER JOIN bookwordaggregates ON books.uid = bookwordaggregates.uid
+FULL OUTER JOIN commonwords ON books.uid=commonwords.uid
+FULL OUTER JOIN cosinesimilarity ON books.uid=cosinesimilarity.uid1
+FULL OUTER JOIN downloads ON books.uid = downloads.uid
+FULL OUTER JOIN sequences ON books.uid = sequences.uid
+FULL OUTER JOIN userratings ON books.uid = userratings.book_id
+FULL OUTER JOIN userreview ON books.uid = userreview.book_id
+FULL OUTER JOIN users ON users.username = userreview.username 
+and userreview.username = userratings.username
+where books.uid= 33409;
+
+  uid  |                          title                          | date_published |             link_to_book              |  uid  |         name         |         name         | birthdate | author1 | author2 | lda_score | cos_similarity |  uid  | per_sentence | total_count | avg_word_length | uid | word | frequency | uid1 | uid2 | cos_similarity | uid | download | uid | word | next_word | times_appear | username | book_id | rating | timestamp | username | book_id | review | timestamp | username | email | password 
+-------+---------------------------------------------------------+----------------+---------------------------------------+-------+----------------------+----------------------+-----------+---------+---------+-----------+----------------+-------+--------------+-------------+-----------------+-----+------+-----------+------+------+----------------+-----+----------+-----+------+-----------+--------------+----------+---------+--------+-----------+----------+---------+--------+-----------+----------+-------+----------
+ 33409 | The Ranch Girls at Rainbow Lodge The Ranch Girls Series | 2010-08-11     | http://www.gutenberg.org/ebooks/33409 | 33409 | Vandercook, Margaret | Vandercook, Margaret |      1876 |         |         |           |                | 33409 |      14.3207 |       58527 |          4.4062 |     |      |           |      |      |                |     |          |     |      |           |              |          |         |        |           |          |         |        |           |          |       | 
+(1 row)
+
 
 -- Dispay the list of authors' names, ordered by last name
 select name 
