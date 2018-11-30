@@ -17,8 +17,7 @@ FULL OUTER JOIN commonwords ON books.uid=commonwords.uid
 FULL OUTER JOIN cosinesimilarity ON books.uid=cosinesimilarity.uid1
 FULL OUTER JOIN downloads ON books.uid = downloads.uid
 FULL OUTER JOIN userratings ON books.uid = userratings.book_id
-FULL OUTER JOIN userreview ON books.uid = userreview.book_id
-and userreview.username = userratings.username
+where books.title='Pride and Prejudice';
 
   uid  |                          title                          | date_published |             link_to_book              |         name         | birthdate | author2 | cos_similarity | per_sentence | total_count | avg_word_length | word | frequency | uid2 | cos_similarity | download | username | rating | timestamp | review | timestamp 
 -------+---------------------------------------------------------+----------------+---------------------------------------+----------------------+-----------+---------+----------------+--------------+-------------+-----------------+------+-----------+------+----------------+----------+----------+--------+-----------+--------+-----------
