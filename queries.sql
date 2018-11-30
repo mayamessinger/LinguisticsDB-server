@@ -33,6 +33,9 @@ authors.name, bookwordaggregates.total_count;
  Pride and Prejudice | http://www.gutenberg.org/ebooks/42671 | Austen, Jane |      123670 |    
 (2 rows)
 
+
+++ RANDOM QUERIES BELOW FOR TESTING ++
+
 -- Dispay the list of authors' names, ordered by last name
 select name 
 from authors 
