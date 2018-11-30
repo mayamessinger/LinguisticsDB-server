@@ -19,12 +19,6 @@ FULL OUTER JOIN downloads ON books.uid = downloads.uid
 FULL OUTER JOIN userratings ON books.uid = userratings.book_id
 where books.title='Pride and Prejudice';
 
-  uid  |                          title                          | date_published |             link_to_book              |         name         | birthdate | author2 | cos_similarity | per_sentence | total_count | avg_word_length | word | frequency | uid2 | cos_similarity | download | username | rating | timestamp | review | timestamp 
--------+---------------------------------------------------------+----------------+---------------------------------------+----------------------+-----------+---------+----------------+--------------+-------------+-----------------+------+-----------+------+----------------+----------+----------+--------+-----------+--------+-----------
- 33409 | The Ranch Girls at Rainbow Lodge The Ranch Girls Series | 2010-08-11     | http://www.gutenberg.org/ebooks/33409 | Vandercook, Margaret |      1876 |         |                |      14.3207 |       58527 |          4.4062 |      |           |      |                |          |          |        |           |        |          
-(1 row)
-
-
 
 -- Dispay the list of authors' names, ordered by last name
 select name 
