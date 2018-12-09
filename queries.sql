@@ -7,7 +7,8 @@
  --- ADVANCED SEARCH QUERY
 
 SELECT books.title, books.link_to_book, 
-authors.name, bookwordaggregates.total_count
+authors.name, bookwordaggregates.total_count,
+avg(userratings.rating)
 FROM books
 FULL OUTER JOIN writes ON books.uid = writes.uid
 FULL OUTER JOIN authors ON authors.name = writes.name
@@ -17,8 +18,23 @@ FULL OUTER JOIN commonwords ON books.uid=commonwords.uid
 FULL OUTER JOIN cosinesimilarity ON books.uid=cosinesimilarity.uid1
 FULL OUTER JOIN downloads ON books.uid = downloads.uid
 FULL OUTER JOIN userratings ON books.uid = userratings.book_id
-where books.title='Pride and Prejudice';
+where books.title like '%d Prejudice%'
+and authors.name like '%Austen%'
+and authors.birthdate > -1000 and authors.birthdate < 2018
+and bookwordaggregates.per_sentence > 0 and bookwordaggregates.per_sentence < 35
+and bookwordaggregates.total_count > 0 and bookwordaggregates.total_count < 3e+06
+and bookwordaggregates.avg_word_length > 0 and bookwordaggregates.avg_word_length < 10
+group by books.title, books.link_to_book, 
+authors.name, bookwordaggregates.total_count;
 
+        title        |             link_to_book              |     name     | total_count | avg 
+---------------------+---------------------------------------+--------------+-------------+-----
+ Pride and Prejudice | http://www.gutenberg.org/ebooks/1342  | Austen, Jane |      123287 |    
+ Pride and Prejudice | http://www.gutenberg.org/ebooks/42671 | Austen, Jane |      123670 |    
+(2 rows)
+
+
+++ RANDOM QUERIES BELOW FOR TESTING ++
 
 -- Dispay the list of authors' names, ordered by last name
 select name 
