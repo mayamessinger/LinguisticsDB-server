@@ -377,109 +377,109 @@ function book(book_id, pres)	{
 	}
 
 
-	// author and bday
-	pgClient.query("", (err, res) => {
-		if (err)	{
-			return err;
-		}
-		else	{
-			bookInfo.author = res.rows[0].name;
-			bookInfo.authorbday = res.rows[0].birthdate;
-		}
-	});
+	// // author and bday
+	// pgClient.query("", (err, res) => {
+	// 	if (err)	{
+	// 		return err;
+	// 	}
+	// 	else	{
+	// 		bookInfo.author = res.rows[0].name;
+	// 		bookInfo.authorbday = res.rows[0].birthdate;
+	// 	}
+	// });
 
-	// title and released
-	pgClient.query("", (err, res) => {
-		if (err)	{
-			return err;
-		}
-		else	{
-			bookInfo.title = res.rows[0].title;
-			bookInfo.released = res.rows[0].date_published;
-		}
-	});
+	// // title and released
+	// pgClient.query("", (err, res) => {
+	// 	if (err)	{
+	// 		return err;
+	// 	}
+	// 	else	{
+	// 		bookInfo.title = res.rows[0].title;
+	// 		bookInfo.released = res.rows[0].date_published;
+	// 	}
+	// });
 
-	// wc, wps, awl
-	pgClient.query("", (err, res) => {
-		if (err)	{
-			return err;
-		}
-		else	{
-			bookInfo.wc = res.rows[0].total_count;
-			bookInfo.wps = res.rows[0].per_sentence;
-			bookInfo.wps = res.rows[0].avg_word_length;
-		}
-	});
+	// // wc, wps, awl
+	// pgClient.query("", (err, res) => {
+	// 	if (err)	{
+	// 		return err;
+	// 	}
+	// 	else	{
+	// 		bookInfo.wc = res.rows[0].total_count;
+	// 		bookInfo.wps = res.rows[0].per_sentence;
+	// 		bookInfo.wps = res.rows[0].avg_word_length;
+	// 	}
+	// });
 
-	// avgRating
-	pgClient.query("", (err, res) => {
-		if (err)	{
-			return err;
-		}
-		else	{
-			bookInfo.avgRating = res.rows;
-		}
-	});
+	// // avgRating
+	// pgClient.query("", (err, res) => {
+	// 	if (err)	{
+	// 		return err;
+	// 	}
+	// 	else	{
+	// 		bookInfo.avgRating = res.rows;
+	// 	}
+	// });
 
-	// numRatings
-	pgClient.query("", (err, res) => {
-		if (err)	{
-			return err;
-		}
-		else	{
-			bookInfo.numRatings = res.rows;
-		}
-	});
+	// // numRatings
+	// pgClient.query("", (err, res) => {
+	// 	if (err)	{
+	// 		return err;
+	// 	}
+	// 	else	{
+	// 		bookInfo.numRatings = res.rows;
+	// 	}
+	// });
 
-	// popularWords
-	pgClient.query("", (err, res) => {
-		if (err)	{
-			return err;
-		}
-		else	{
-			bookInfo.popularWords = res.rows;
-		}
-	});
+	// // popularWords
+	// pgClient.query("", (err, res) => {
+	// 	if (err)	{
+	// 		return err;
+	// 	}
+	// 	else	{
+	// 		bookInfo.popularWords = res.rows;
+	// 	}
+	// });
 
-	// popularSequences
-	pgClient.query("", (err, res) => {
-		if (err)	{
-			return err;
-		}
-		else	{
-			bookInfo.popularSequences = res.rows;
-		}
-	});
+	// // popularSequences
+	// pgClient.query("", (err, res) => {
+	// 	if (err)	{
+	// 		return err;
+	// 	}
+	// 	else	{
+	// 		bookInfo.popularSequences = res.rows;
+	// 	}
+	// });
 
-	// reviews
-	pgClient.query("", (err, res) => {
-		if (err)	{
-			return err;
-		}
-		else	{
-			bookInfo.reviews = res.rows;
-		}
-	});
+	// // reviews
+	// pgClient.query("", (err, res) => {
+	// 	if (err)	{
+	// 		return err;
+	// 	}
+	// 	else	{
+	// 		bookInfo.reviews = res.rows;
+	// 	}
+	// });
 
-	// similarBooks
-	pgClient.query("", (err, res) => {
-		if (err)	{
-			return err;
-		}
-		else	{
-			bookInfo.similarBooks = res.rows;
-		}
-	});
+	// // similarBooks
+	// pgClient.query("", (err, res) => {
+	// 	if (err)	{
+	// 		return err;
+	// 	}
+	// 	else	{
+	// 		bookInfo.similarBooks = res.rows;
+	// 	}
+	// });
 
-	// similarAuthors
-	pgClient.query("", (err, res) => {
-		if (err)	{
-			return err;
-		}
-		else	{
-			bookInfo.similarAuthors = res.rows;
-		}
-	});
+	// // similarAuthors
+	// pgClient.query("", (err, res) => {
+	// 	if (err)	{
+	// 		return err;
+	// 	}
+	// 	else	{
+	// 		bookInfo.similarAuthors = res.rows;
+	// 	}
+	// });
 
 	setTimeout(function() {pres.send(bookInfo)}, 500);
 }
