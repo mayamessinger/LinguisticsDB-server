@@ -359,6 +359,7 @@ function profile(username, pres)	{
 function book(book_id, pres)	{
 	bookInfo = {
 		book_id: book_id,
+		title: null,
 		author: null,
 		authorbday: null,
 		released: null,
@@ -375,24 +376,26 @@ function book(book_id, pres)	{
 		similarAuthors: []
 	}
 
+
 	// author and bday
 	pgClient.query("", (err, res) => {
 		if (err)	{
 			return err;
 		}
 		else	{
-			bookInfo. = res.rows[0].name;
+			bookInfo.author = res.rows[0].name;
 			bookInfo.authorbday = res.rows[0].birthdate;
 		}
 	});
 
-	// released
+	// title and released
 	pgClient.query("", (err, res) => {
 		if (err)	{
 			return err;
 		}
 		else	{
-			bookInfo.released = res.rows;
+			bookInfo.title = res.rows[0].title;
+			bookInfo.released = res.rows[0].date_published;
 		}
 	});
 
@@ -414,7 +417,7 @@ function book(book_id, pres)	{
 			return err;
 		}
 		else	{
-			bookInfo. = res.rows;
+			bookInfo.avgRating = res.rows;
 		}
 	});
 
@@ -424,7 +427,7 @@ function book(book_id, pres)	{
 			return err;
 		}
 		else	{
-			bookInfo. = res.rows;
+			bookInfo.numRatings = res.rows;
 		}
 	});
 
@@ -434,7 +437,7 @@ function book(book_id, pres)	{
 			return err;
 		}
 		else	{
-			bookInfo. = res.rows;
+			bookInfo.popularWords = res.rows;
 		}
 	});
 
@@ -444,7 +447,7 @@ function book(book_id, pres)	{
 			return err;
 		}
 		else	{
-			bookInfo. = res.rows;
+			bookInfo.popularSequences = res.rows;
 		}
 	});
 
@@ -454,7 +457,7 @@ function book(book_id, pres)	{
 			return err;
 		}
 		else	{
-			bookInfo. = res.rows;
+			bookInfo.reviews = res.rows;
 		}
 	});
 
@@ -464,7 +467,7 @@ function book(book_id, pres)	{
 			return err;
 		}
 		else	{
-			bookInfo. = res.rows;
+			bookInfo.similarBooks = res.rows;
 		}
 	});
 
@@ -474,7 +477,7 @@ function book(book_id, pres)	{
 			return err;
 		}
 		else	{
-			bookInfo. = res.rows;
+			bookInfo.similarAuthors = res.rows;
 		}
 	});
 
