@@ -350,7 +350,7 @@ function profile(username, pres)	{
 	});
 
 	// 5 books rated
-	pgClient.query("SELECT uid, title, rating FROM (SELECT book_id FROM UserRatings WHERE username LIKE '" + username + "' LIMIT 5) AS rates JOIN Books;", (err, res) => {
+	pgClient.query("SELECT uid, title, rating FROM (SELECT book_id, rating FROM UserRatings WHERE username LIKE '" + username + "' LIMIT 5) AS rates JOIN Books ON rates.book_id = Books.uid;", (err, res) => {
 		if (err)	{
 			return err;
 		}
@@ -360,7 +360,7 @@ function profile(username, pres)	{
 	});
 
 	// 5 books commented on
-	pgClient.query("SELECT uid, title FROM (SELECT book_id FROM UserReviews WHERE username LIKE '" + username + "' LIMIT 5) AS rates JOIN Books;", (err, res) => {
+	pgClient.query("SELECT uid, title FROM (SELECT book_id FROM UserReview WHERE username LIKE '" + username + "' LIMIT 5) AS rates JOIN Books ON rates.book_id = Books.uid;", (err, res) => {
 		if (err)	{
 			return err;
 		}
