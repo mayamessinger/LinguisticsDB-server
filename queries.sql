@@ -27,8 +27,8 @@ and bookwordaggregates.total_count > 0 and bookwordaggregates.total_count < 3e+0
 and bookwordaggregates.avg_word_length > 0 and bookwordaggregates.avg_word_length < 50
 and (downloads.download >= 0 and downloads.download < 1000000)
 #and (commonwords.word like '%afrequentword%')
-(and (sequences.word like '%someword%')
-or (sequences.word like '%otherword%'))
+and (sequences.word like '%someword%')
+and (sequences.word like '%otherword%')
 #and (cosinesimilarity.uid2=4236)
 group by books.title, books.link_to_book, 
 authors.name, bookwordaggregates.total_count;
