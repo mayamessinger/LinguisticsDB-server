@@ -43,6 +43,12 @@ app.post("/", (req, pres) => {
 	else if (req.body.profile)	{
 		profile(req.body.username, pres);
 	}
+	else if (req.body.login)	{
+		login(req.body.username, req.body.password, pres);
+	}
+	else if (req.body.makeUser)	{
+		makeUser(req.body.username, req.body.email, req.body.password, pres);
+	}
 	else if (req.body.book)	{
 		book(req.body.book_id, pres);
 	}
@@ -326,17 +332,17 @@ function profile(username, pres)	{
 	};
 
 	// email
-	pgClient.query("SELECT email FROM Users WHERE username = " + username + ";", (err, res) => {
+	pgClient.query("SELECT email FROM Users WHERE username LIKE '" + username + "';", (err, res) => {
 		if (err)	{
 			return err;
 		}
 		else	{
-			profileInfo.email = res.rows;
+			profileInfo.email = res.rows[0].email;
 		}
 	});
 
 	// 5 books rated
-	pgClient.query("SELECT uid, title, rating FROM (SELECT book_id FROM UserRatings WHERE username = " + username + " LIMIT 5) AS rates JOIN Books;", (err, res) => {
+	pgClient.query("SELECT uid, title, rating FROM (SELECT book_id FROM UserRatings WHERE username LIKE '" + username + "' LIMIT 5) AS rates JOIN Books;", (err, res) => {
 		if (err)	{
 			return err;
 		}
@@ -346,7 +352,7 @@ function profile(username, pres)	{
 	});
 
 	// 5 books commented on
-	pgClient.query("SELECT uid, title FROM (SELECT book_id FROM UserReviews WHERE username = " + username + " LIMIT 5) AS rates JOIN Books;", (err, res) => {
+	pgClient.query("SELECT uid, title FROM (SELECT book_id FROM UserReviews WHERE username LIKE '" + username + "' LIMIT 5) AS rates JOIN Books;", (err, res) => {
 		if (err)	{
 			return err;
 		}
@@ -355,7 +361,39 @@ function profile(username, pres)	{
 		}
 	});
 
-	setTimeout(function() {pres.send(profileInfo)}, 200);
+	setTimeout(function() {pres.send(profileInfo)}, 500);
+}
+
+function login(un, pw, pres)	{
+	var success = false;
+
+	pgClient.query("SELECT * FROM Users WHERE username LIKE '" + un + "' AND password LIKE '" + pw + "';", (err, res) => {
+		if (err)	{
+			return err;
+		}
+		else	{
+			if (res.rows.length > 0)	{
+				success = true;
+			}
+		}
+	});
+
+	setTimeout(function() {pres.send(success)}, 200);
+}
+
+function makeUser(un, email, pw, pres)	{
+	var success = false;
+
+	pgClient.query("INSERT INTO Users VALUES ('" + un + "', '" + email + "', '" + pw + "');", (err, res) => {
+		if (err)	{
+			return err;
+		}
+		else	{
+			success = true;
+		}
+	});
+
+	setTimeout(function() {pres.send(success)}, 200);
 }
 
 function book(book_id, pres)	{
