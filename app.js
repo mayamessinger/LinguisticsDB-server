@@ -43,6 +43,9 @@ app.post("/", (req, pres) => {
 	else if (req.body.profile)	{
 		profile(req.body.username, pres);
 	}
+	else if (req.body.changePW)	{
+		changePassword(req.body.username, req.body.oldPW, req.body.newPW, pres);
+	}
 	else if (req.body.login)	{
 		login(req.body.username, req.body.password, pres);
 	}
@@ -362,6 +365,21 @@ function profile(username, pres)	{
 	});
 
 	setTimeout(function() {pres.send(profileInfo)}, 500);
+}
+
+function changePassword(un, oldPW, newPW, pres)	{
+	var success = false;
+
+	pgClient.query("UPDATE Users SET password = '" + newPW + "' WHERE username LIKE '" + un + "' AND password LIKE '" + oldPW + "';", (err, res) => {
+		if (err)	{
+			return err;
+		}
+		else	{
+			success = true;
+		}
+	});
+
+	setTimeout(function() {pres.send(success)}, 200);
 }
 
 function login(un, pw, pres)	{
