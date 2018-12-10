@@ -5,6 +5,8 @@ const bodyParser = require("body-parser");
 const app = express();
 const port = 3001;
 var pg = require("pg");
+var rp = require("request-promise");
+var cheerio = require("cheerio");
 require("dotenv").config();
 
 app.use(bodyParser.urlencoded({extended:true}));
@@ -422,13 +424,22 @@ function book(book_id, pres)	{
 	});
 
 	// numDownloads
-	pgClient.query("SELECT download FROM Downloads WHERE uid = " + book_id + ";", (err, res) => {
-		if (err)	{
-			return err;
+	let options = {
+		url: "https://www.gutenberg.org/ebooks/" + book_id,
+		transform: function (body) {
+			return cheerio.load(body);
 		}
-		else	{
-			bookInfo.numDownloads = res.rows[0].download;
-		}
+	}
+
+	rp(options)
+	.then(resp => {
+		bookInfo.numDownloads = resp("*[itemprop = 'interactionCount']").text().split(" ")[0];
+
+		pgClient.query("INSERT INTO Downloads VALUES (" + book_id + ", " + bookInfo.numDownloads + ") ON CONFLICT (uid) DO UPDATE SET download = " + bookInfo.numDownloads + ";", (err, res) => {
+			if (err)	{
+				return err;
+			}
+		});
 	});
 
 	// // avgRating
