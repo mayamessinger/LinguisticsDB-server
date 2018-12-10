@@ -243,7 +243,7 @@ function statistics(pres)	{
 	});
 
 	// most downloaded books
-	pgClient.query("select title, download from Downloads, Books where Downloads.uid=Books.uid order by Download.desc limit 10;", (err, res) => {
+	pgClient.query("select title, download from Downloads, Books where Downloads.uid=Books.uid order by Download DESC limit 10;", (err, res) => {
 		if (err)	{
 			return err;
 		}
@@ -366,10 +366,11 @@ function book(book_id, pres)	{
 		wc: null,
 		wps: null,
 		awl: null,
+		numDownloads: null,
 		avgRating: null,
 		numRatings: null,
 		userRating: null,
-		popularWords: [],
+		commonWords: [],
 		popularSequences: [],
 		reviews: [],
 		similarBooks: [],
@@ -377,62 +378,81 @@ function book(book_id, pres)	{
 	}
 
 
-	// // author and bday
-	// pgClient.query("", (err, res) => {
-	// 	if (err)	{
-	// 		return err;
-	// 	}
-	// 	else	{
-	// 		bookInfo.author = res.rows[0].name;
-	// 		bookInfo.authorbday = res.rows[0].birthdate;
-	// 	}
-	// });
+	// author
+	pgClient.query("SELECT * FROM Writes WHERE uid = " + book_id + ";", (err, res) => {
+		if (err)	{
+			return err;
+		}
+		else	{
+			bookInfo.author = res.rows[0].name;
+		}
+	});
 
-	// // title and released
-	// pgClient.query("", (err, res) => {
-	// 	if (err)	{
-	// 		return err;
-	// 	}
-	// 	else	{
-	// 		bookInfo.title = res.rows[0].title;
-	// 		bookInfo.released = res.rows[0].date_published;
-	// 	}
-	// });
+	// authorbday
+	pgClient.query("SELECT * FROM Authors JOIN (SELECT * FROM Writes WHERE uid = " + book_id + ") AS Book ON Authors.name = Book.name;", (err, res) => {
+		if (err)	{
+			return err;
+		}
+		else	{
+			bookInfo.authorbday = res.rows[0].birthdate;
+		}
+	});
 
-	// // wc, wps, awl
-	// pgClient.query("", (err, res) => {
-	// 	if (err)	{
-	// 		return err;
-	// 	}
-	// 	else	{
-	// 		bookInfo.wc = res.rows[0].total_count;
-	// 		bookInfo.wps = res.rows[0].per_sentence;
-	// 		bookInfo.wps = res.rows[0].avg_word_length;
-	// 	}
-	// });
+	// title and released
+	pgClient.query("SELECT * FROM Books WHERE uid = " + book_id + ";", (err, res) => {
+		if (err)	{
+			return err;
+		}
+		else	{
+			bookInfo.title = res.rows[0].title;
+			bookInfo.released = res.rows[0].date_published;
+		}
+	});
+
+	// wc, wps, awl
+	pgClient.query("SELECT * FROM BookWordAggregates WHERE uid = " + book_id + ";", (err, res) => {
+		if (err)	{
+			return err;
+		}
+		else	{
+			bookInfo.wc = res.rows[0].total_count;
+			bookInfo.wps = res.rows[0].per_sentence;
+			bookInfo.awl = res.rows[0].avg_word_length;
+		}
+	});
+
+	// numDownloads
+	pgClient.query("SELECT download FROM Downloads WHERE uid = " + book_id + ";", (err, res) => {
+		if (err)	{
+			return err;
+		}
+		else	{
+			bookInfo.numDownloads = res.rows[0].download;
+		}
+	});
 
 	// // avgRating
-	// pgClient.query("", (err, res) => {
+	// pgClient.query("SELECT AVG(rating) FROM UserRatings WHERE book_id = " + book_id + ";", (err, res) => {
 	// 	if (err)	{
 	// 		return err;
 	// 	}
 	// 	else	{
-	// 		bookInfo.avgRating = res.rows;
+	// 		bookInfo.avgRating = res.rows[0].rating;
 	// 	}
 	// });
 
 	// // numRatings
-	// pgClient.query("", (err, res) => {
+	// pgClient.query("SELECT COUNT(rating) FROM UserRatings WHERE book_id = " + book_id + ";", (err, res) => {
 	// 	if (err)	{
 	// 		return err;
 	// 	}
 	// 	else	{
-	// 		bookInfo.numRatings = res.rows;
+	// 		bookInfo.numRatings = res.rows[0].rating;
 	// 	}
 	// });
 
-	// // popularWords
-	// pgClient.query("", (err, res) => {
+	// // commonWords
+	// pgClient.query("SELECT * FROM CommonWords WHERE uid = " + book_id + " ORDER BY frequency DESC LIMIT 5;", (err, res) => {
 	// 	if (err)	{
 	// 		return err;
 	// 	}
@@ -442,7 +462,7 @@ function book(book_id, pres)	{
 	// });
 
 	// // popularSequences
-	// pgClient.query("", (err, res) => {
+	// pgClient.query("SELECT * FROM Sequences WHERE uid = " + book_id + " ORDER BY times_appear DESC LIMIT 5;", (err, res) => {
 	// 	if (err)	{
 	// 		return err;
 	// 	}
@@ -452,7 +472,7 @@ function book(book_id, pres)	{
 	// });
 
 	// // reviews
-	// pgClient.query("", (err, res) => {
+	// pgClient.query("SELECT * FROM UserReview WHERE book_id = " + book_id + ";", (err, res) => {
 	// 	if (err)	{
 	// 		return err;
 	// 	}
@@ -462,7 +482,7 @@ function book(book_id, pres)	{
 	// });
 
 	// // similarBooks
-	// pgClient.query("", (err, res) => {
+	// pgClient.query("SELECT * FROM CosineSimilarity WHERE uid1 = " + book_id + " ORDER BY rank ASC LIMIT 5;", (err, res) => {
 	// 	if (err)	{
 	// 		return err;
 	// 	}
@@ -472,7 +492,7 @@ function book(book_id, pres)	{
 	// });
 
 	// // similarAuthors
-	// pgClient.query("", (err, res) => {
+	// pgClient.query("SELECT * FROM AuthorSimilarity WHERE author = " + bookInfo.author + " ORDER BY rank ASC LIMIT 5;", (err, res) => {
 	// 	if (err)	{
 	// 		return err;
 	// 	}
