@@ -55,6 +55,12 @@ app.post("/", (req, pres) => {
 	else if (req.body.book)	{
 		book(req.body.book_id, pres);
 	}
+	else if (req.body.rate)	{
+		rate(req.body.username, req.body.book_id, req.body.rating, pres);
+	}
+	else if (req.body.rev)	{
+		review(req.body.username, req.body.book_id, req.body.review, pres);
+	}
 });
 
 function basicSearch(st, sf, pres)	{
@@ -142,7 +148,7 @@ function basicSearch(st, sf, pres)	{
 }
 
 function advancedSearch(args, pres)	{
-	pgClient.query("SELECT books.title, books.link_to_book, authors.name, bookwordaggregates.total_count, avg(userratings.rating) AS rating FROM books FULL OUTER JOIN writes ON books.uid = writes.uid FULL OUTER JOIN authors ON authors.name = writes.name FULL OUTER JOIN authorsimilarity ON authors.name=authorsimilarity.author1 FULL OUTER JOIN bookwordaggregates ON books.uid = bookwordaggregates.uid FULL OUTER JOIN commonwords ON books.uid=commonwords.uid FULL OUTER JOIN cosinesimilarity ON books.uid=cosinesimilarity.uid1 FULL OUTER JOIN downloads ON books.uid = downloads.uid FULL OUTER JOIN userratings ON books.uid = userratings.book_id where books.title ILIKE '%"  + args.titleLike + "%' and authors.name ILIKE '%"  + args.authorLike + "%' and authors.birthdate > "  + args.bdLow + " and authors.birthdate < "  + args.bdHigh + " and bookwordaggregates.per_sentence > " + args.wpsLow + " and bookwordaggregates.per_sentence < "  + args.wpsHigh + " and bookwordaggregates.total_count > "  + args.wcLow + " and bookwordaggregates.total_count < "  + args.wcHigh + " and bookwordaggregates.avg_word_length > "  + args.wlLow + " and bookwordaggregates.avg_word_length < "  + args.wlHigh + " group by books.title, books.link_to_book, authors.name, bookwordaggregates.total_count;", (err, res) => {
+	pgClient.query("SELECT books.title, books.link_to_book, authors.name, bookwordaggregates.total_count, CAST(avg(userratings.rating) AS DECIMAL(10, 2)) AS rating FROM books FULL OUTER JOIN writes ON books.uid = writes.uid FULL OUTER JOIN authors ON authors.name = writes.name FULL OUTER JOIN authorsimilarity ON authors.name=authorsimilarity.author1 FULL OUTER JOIN bookwordaggregates ON books.uid = bookwordaggregates.uid FULL OUTER JOIN commonwords ON books.uid=commonwords.uid FULL OUTER JOIN cosinesimilarity ON books.uid=cosinesimilarity.uid1 FULL OUTER JOIN downloads ON books.uid = downloads.uid FULL OUTER JOIN userratings ON books.uid = userratings.book_id where books.title ILIKE '%"  + args.titleLike + "%' and authors.name ILIKE '%"  + args.authorLike + "%' and authors.birthdate > "  + args.bdLow + " and authors.birthdate < "  + args.bdHigh + " and bookwordaggregates.per_sentence > " + args.wpsLow + " and bookwordaggregates.per_sentence < "  + args.wpsHigh + " and bookwordaggregates.total_count > "  + args.wcLow + " and bookwordaggregates.total_count < "  + args.wcHigh + " and bookwordaggregates.avg_word_length > "  + args.wlLow + " and bookwordaggregates.avg_word_length < "  + args.wlHigh + " group by books.title, books.link_to_book, authors.name, bookwordaggregates.total_count;", (err, res) => {
 			if (err)	{
 				return err;
 			}
@@ -273,7 +279,7 @@ function statistics(pres)	{
 	});
 
 	// best rated books
-	pgClient.query("select title, avg(rating) from userratings as rating, books where userratings.book_id=books.uid group by uid order by rating desc limit 10;", (err, res) => {
+	pgClient.query("select title, CAST(avg(rating) AS DECIMAL(10, 2)) as rating FROM UserRatings, Books where UserRatings.book_id=Books.uid group by uid order by rating desc limit 10;", (err, res) => {
 		if (err)	{
 			return err;
 		}
@@ -298,17 +304,17 @@ function statistics(pres)	{
 			return err;
 		}
 		else	{
-			statsInfo.totalRatingInfo = res.rows;
+			statsInfo.totalRatingInfo = res.rows[0].count;
 		}
 	});
 
-	// total ratings
-	pgClient.query("select count(*) from UserReviews", (err, res) => {
+	// total reviews
+	pgClient.query("select count(*) from UserReview", (err, res) => {
 		if (err)	{
 			return err;
 		}
 		else	{
-			statsInfo.totalReviewInfo = res.rows;
+			statsInfo.totalReviewInfo = res.rows[0].count;
 		}
 	});
 
@@ -318,7 +324,7 @@ function statistics(pres)	{
 			return err;
 		}
 		else	{
-			statsInfo.totalUserInfo = res.rows;
+			statsInfo.totalUserInfo = res.rows[0].count;
 		}
 	});
 
@@ -497,25 +503,25 @@ function book(book_id, pres)	{
 		});
 	});
 
-	// // avgRating
-	// pgClient.query("SELECT AVG(rating) AS rating FROM UserRatings WHERE book_id = " + book_id + ";", (err, res) => {
-	// 	if (err)	{
-	// 		return err;
-	// 	}
-	// 	else	{
-	// 		bookInfo.avgRating = res.rows[0].rating;
-	// 	}
-	// });
+	// avgRating
+	pgClient.query("SELECT CAST(AVG(rating) AS DECIMAL(10, 2)) AS rating FROM UserRatings WHERE book_id = " + book_id + ";", (err, res) => {
+		if (err)	{
+			return err;
+		}
+		else	{
+			bookInfo.avgRating = res.rows[0].rating;
+		}
+	});
 
-	// // numRatings
-	// pgClient.query("SELECT COUNT(rating) FROM UserRatings WHERE book_id = " + book_id + ";", (err, res) => {
-	// 	if (err)	{
-	// 		return err;
-	// 	}
-	// 	else	{
-	// 		bookInfo.numRatings = res.rows[0].rating;
-	// 	}
-	// });
+	// numRatings
+	pgClient.query("SELECT COUNT(rating) AS rating FROM UserRatings WHERE book_id = " + book_id + ";", (err, res) => {
+		if (err)	{
+			return err;
+		}
+		else	{
+			bookInfo.numRatings = res.rows[0].rating;
+		}
+	});
 
 	// // commonWords
 	// pgClient.query("SELECT * FROM CommonWords WHERE uid = " + book_id + " ORDER BY frequency DESC LIMIT 5;", (err, res) => {
@@ -537,15 +543,15 @@ function book(book_id, pres)	{
 	// 	}
 	// });
 
-	// // reviews
-	// pgClient.query("SELECT * FROM UserReview WHERE book_id = " + book_id + ";", (err, res) => {
-	// 	if (err)	{
-	// 		return err;
-	// 	}
-	// 	else	{
-	// 		bookInfo.reviews = res.rows;
-	// 	}
-	// });
+	// reviews
+	pgClient.query("SELECT * FROM UserReview WHERE book_id = " + book_id + ";", (err, res) => {
+		if (err)	{
+			return err;
+		}
+		else	{
+			bookInfo.reviews = res.rows;
+		}
+	});
 
 	// // similarBooks
 	// pgClient.query("SELECT * FROM CosineSimilarity WHERE uid1 = " + book_id + " ORDER BY rank ASC LIMIT 5;", (err, res) => {
@@ -568,6 +574,36 @@ function book(book_id, pres)	{
 	// });
 
 	setTimeout(function() {pres.send(bookInfo)}, 500);
+}
+
+function rate(un, uid, rating, pres)	{
+	var success = false;
+
+	pgClient.query("INSERT INTO UserRatings VALUES ('" + un + "', " + uid + ", " + rating + ", NOW()) ON CONFLICT (username, book_id) DO UPDATE SET rating = " + rating + ", timestamp = NOW();", (err, res) => {
+		if (err)	{
+			return err;
+		}
+		else	{
+			success = true;
+		}
+	});
+
+	setTimeout(function() {pres.send(success)}, 500);
+}
+
+function review(un, uid, review, pres)	{
+	var success = false;
+
+	pgClient.query("INSERT INTO UserReview VALUES ('" + un + "', " + uid + ", '" + review + "', NOW()) ON CONFLICT (username, book_id) DO UPDATE SET review = '" + review + "', timestamp = NOW();", (err, res) => {
+		if (err)	{
+			return err;
+		}
+		else	{
+			success = true;
+		}
+	});
+
+	setTimeout(function() {pres.send(success)}, 500);
 }
 
 // https.createServer(sslOptions, app).listen(port);
