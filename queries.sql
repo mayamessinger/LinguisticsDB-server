@@ -15,6 +15,7 @@ FULL OUTER JOIN authors ON authors.name = writes.name
 FULL OUTER JOIN authorsimilarity ON authors.name=authorsimilarity.author1
 FULL OUTER JOIN bookwordaggregates ON books.uid = bookwordaggregates.uid
 FULL OUTER JOIN commonwords ON books.uid=commonwords.uid
+FULL OUTER JOIN sequences
 FULL OUTER JOIN cosinesimilarity ON books.uid=cosinesimilarity.uid1
 FULL OUTER JOIN downloads ON books.uid = downloads.uid
 FULL OUTER JOIN userratings ON books.uid = userratings.book_id
@@ -26,8 +27,8 @@ and bookwordaggregates.total_count > 0 and bookwordaggregates.total_count < 3e+0
 and bookwordaggregates.avg_word_length > 0 and bookwordaggregates.avg_word_length < 50
 and (downloads.download >= 0 and downloads.download < 1000000)
 #and (commonwords.word like '%afrequentword%')
-#and (sequences.word like '%someword%')
-#and (sequences.word like '%otherword%')
+(and (sequences.word like '%someword%')
+or (sequences.word like '%otherword%'))
 #and (cosinesimilarity.uid2=4236)
 group by books.title, books.link_to_book, 
 authors.name, bookwordaggregates.total_count;
