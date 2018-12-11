@@ -405,7 +405,7 @@ function profile(username, pres)	{
 		}
 	});
 
-	setTimeout(function() {pres.send(profileInfo)}, 500);
+	setTimeout(function() {pres.send(profileInfo)}, 2000);
 }
 
 function changePassword(un, oldPW, newPW, pres)	{
@@ -420,7 +420,7 @@ function changePassword(un, oldPW, newPW, pres)	{
 		}
 	});
 
-	setTimeout(function() {pres.send(success)}, 200);
+	setTimeout(function() {pres.send(success)}, 2000);
 }
 
 function login(un, pw, pres)	{
@@ -437,7 +437,7 @@ function login(un, pw, pres)	{
 		}
 	});
 
-	setTimeout(function() {pres.send(success)}, 200);
+	setTimeout(function() {pres.send(success)}, 2000);
 }
 
 function makeUser(un, email, pw, pres)	{
@@ -452,7 +452,7 @@ function makeUser(un, email, pw, pres)	{
 		}
 	});
 
-	setTimeout(function() {pres.send(success)}, 200);
+	setTimeout(function() {pres.send(success)}, 2000);
 }
 
 function book(book_id, pres)	{
@@ -611,7 +611,7 @@ function book(book_id, pres)	{
 		}
 	});
 
-	setTimeout(function() {pres.send(bookInfo)}, 500);
+	setTimeout(function() {pres.send(bookInfo)}, 2000);
 }
 
 function rate(un, uid, rating, pres)	{
@@ -626,7 +626,7 @@ function rate(un, uid, rating, pres)	{
 		}
 	});
 
-	setTimeout(function() {pres.send(success)}, 500);
+	setTimeout(function() {pres.send(success)}, 1000);
 }
 
 function review(un, uid, review, pres)	{
@@ -641,7 +641,7 @@ function review(un, uid, review, pres)	{
 		}
 	});
 
-	setTimeout(function() {pres.send(success)}, 500);
+	setTimeout(function() {pres.send(success)}, 1000);
 }
 
 // https.createServer(sslOptions, app).listen(port);
