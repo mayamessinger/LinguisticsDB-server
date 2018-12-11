@@ -65,13 +65,12 @@ app.post("/", (req, pres) => {
 
 function basicSearch(st, sf, pres)	{
 	if (sf === "Title")	{
-		pgClient.query("SELECT * FROM (SELECT * FROM Books WHERE Title ILIKE '%" + st + "%') AS info \
-			JOIN BookWordAggregates ON info.uid = BookWordAggregates.uid JOIN Writes ON info.uid = Writes.uid;", (err, res) => {
+		pgClient.query("SELECT * FROM (SELECT * FROM Books WHERE Title ILIKE $1) AS info JOIN BookWordAggregates ON info.uid = BookWordAggregates.uid JOIN Writes ON info.uid = Writes.uid;", ["%" + st + "%"], (err, res) => {
 				if (err)	{
 					return err;
 				}
 				else	{
-			  pres.send(res.rows);	// .uid, .title, etc. to access columns
+			  	pres.send(res.rows);	// .uid, .title, etc. to access columns
 			  }
 		});
 	}
@@ -86,8 +85,7 @@ function basicSearch(st, sf, pres)	{
 			st = stt;
 		}
 
-		pgClient.query("SELECT * FROM (SELECT * FROM Writes WHERE name ILIKE '%" + st + "%') AS info \
-			JOIN Books ON info.uid = Books.uid;", (err, res) => {
+		pgClient.query("SELECT * FROM (SELECT * FROM Writes WHERE name ILIKE $1) AS info JOIN Books ON info.uid = Books.uid;", ["%" + st + "%"], (err, res) => {
 				if (err)	{
 					return err;
 				}
@@ -98,7 +96,7 @@ function basicSearch(st, sf, pres)	{
 	}
 
 	if (sf === "Year Released")	{
-		pgClient.query("SELECT * FROM Books WHERE date_published LIKE '%" + st + "%';", (err, res) => {
+		pgClient.query("SELECT * FROM Books WHERE date_published LIKE $1;", ["%" + st + "%"], (err, res) => {
 			if (err)	{
 				return err;
 			}
@@ -116,8 +114,8 @@ function basicSearch(st, sf, pres)	{
 				st = stt;
 		}
 
-		pgClient.query("SELECT * FROM (SELECT * FROM BookWordAggregates WHERE (total_count >= " + st + " - 300 \
-			AND total_count <= " + st + " + 300)) AS info JOIN Books ON info.uid = Books.uid;", (err, res) => {
+		pgClient.query("SELECT * FROM (SELECT * FROM BookWordAggregates WHERE (total_count >= $1 - 300 \
+			AND total_count <= $1 + 300)) AS info JOIN Books ON info.uid = Books.uid;", [st], (err, res) => {
 				if (err)	{
 					return err;
 				}
@@ -135,8 +133,8 @@ function basicSearch(st, sf, pres)	{
 				st = stt;
 		}
 
-		pgClient.query("SELECT * FROM (SELECT * FROM BookWordAggregates WHERE (per_sentence = " + st + ")) AS info \
-			JOIN Books ON info.uid = Books.uid;", (err, res) => {
+		pgClient.query("SELECT * FROM (SELECT * FROM BookWordAggregates WHERE (per_sentence = $1)) AS info \
+			JOIN Books ON info.uid = Books.uid;", [st], (err, res) => {
 				if (err)	{
 					return err;
 				}
@@ -148,26 +146,32 @@ function basicSearch(st, sf, pres)	{
 }
 
 function advancedSearch(args, pres)	{
-	var query = "SELECT books.title, books.link_to_book, authors.name, bookwordaggregates.total_count, avg(userratings.rating) AS rating FROM books FULL OUTER JOIN writes ON books.uid = writes.uid FULL OUTER JOIN authors ON authors.name = writes.name FULL OUTER JOIN authorsimilarity ON authors.name=authorsimilarity.author1 FULL OUTER JOIN bookwordaggregates ON books.uid = bookwordaggregates.uid FULL OUTER JOIN commonwords ON books.uid=commonwords.uid FULL OUTER JOIN cosinesimilarity ON books.uid=cosinesimilarity.uid1 FULL OUTER JOIN downloads ON books.uid = downloads.uid FULL OUTER JOIN userratings ON books.uid = userratings.book_id where books.title ILIKE '%"  + args.titleLike + "%' and authors.name ILIKE '%"  + args.authorLike + "%' and authors.birthdate > "  + args.bdLow + " and authors.birthdate < "  + args.bdHigh + " and bookwordaggregates.per_sentence > " + args.wpsLow + " and bookwordaggregates.per_sentence < "  + args.wpsHigh + " and bookwordaggregates.total_count > "  + args.wcLow + " and bookwordaggregates.total_count < "  + args.wcHigh + " and bookwordaggregates.avg_word_length > "  + args.wlLow + " and bookwordaggregates.avg_word_length < "  + args.wlHigh;
+	var values = ["%" + args.titleLike + "%", "%" + args.authorLike + "%", args.bdLow, args.bdHigh, args.wpsLow, args.wpsHigh, args.wcLow, args.wcHigh, args.wlLow, args.wlHigh];
+
+	var query = "SELECT books.title, books.link_to_book, authors.name, bookwordaggregates.total_count, avg(userratings.rating) AS rating FROM books FULL OUTER JOIN writes ON books.uid = writes.uid FULL OUTER JOIN authors ON authors.name = writes.name FULL OUTER JOIN authorsimilarity ON authors.name=authorsimilarity.author1 FULL OUTER JOIN bookwordaggregates ON books.uid = bookwordaggregates.uid FULL OUTER JOIN commonwords ON books.uid=commonwords.uid FULL OUTER JOIN cosinesimilarity ON books.uid=cosinesimilarity.uid1 FULL OUTER JOIN downloads ON books.uid = downloads.uid FULL OUTER JOIN userratings ON books.uid = userratings.book_id where books.title ILIKE $1 and authors.name ILIKE $2 and authors.birthdate > $3 and authors.birthdate < $4 and bookwordaggregates.per_sentence > $5 and bookwordaggregates.per_sentence < $6 and bookwordaggregates.total_count > $7 and bookwordaggregates.total_count < $8 and bookwordaggregates.avg_word_length > $9 and bookwordaggregates.avg_word_length < $10;"
 
 	if (args.freqWords)	{
 		args.freqWords.split(",").forEach(word =>	{
-			word = word.trim();
+			word = "%" + word.trim() + "%";
+			values.push(word);
 
-			query += " AND CommonWords.word LIKE '%" + word + "%'";
+			query += " AND CommonWords.word LIKE $" + values.length;
 		});
 	}
 
 	if (args.wordsContained)	{
 		args.wordsContained.split(",").forEach(word => {
-			word = word.trim();
+			word = "%" + word.trim() + "%";
+			values.push(word);
 
-			query += " AND Sequences.word LIKE '%" + word + "%'";
+			query += " AND Sequences.word LIKE $" + values.length;
 		});
 	}
 
 	if (args.similarTo)	{
-		query += " AND CosineSimilarity.uid2 = " + args.similarTo;
+		values.push(args.similarTo);
+
+		query += " AND CosineSimilarity.uid2 = $" + values.length;
 	}
 
 	query += " group by books.title, books.link_to_book, authors.name, bookwordaggregates.total_count;";
@@ -376,7 +380,7 @@ function profile(username, pres)	{
 	};
 
 	// email
-	pgClient.query("SELECT email FROM Users WHERE username LIKE '" + username + "';", (err, res) => {
+	pgClient.query("SELECT email FROM Users WHERE username LIKE $1;", [username], (err, res) => {
 		if (err)	{
 			return err;
 		}
@@ -386,7 +390,7 @@ function profile(username, pres)	{
 	});
 
 	// 5 books rated
-	pgClient.query("SELECT uid, title, rating FROM (SELECT book_id, rating FROM UserRatings WHERE username LIKE '" + username + "' LIMIT 5) AS rates JOIN Books ON rates.book_id = Books.uid;", (err, res) => {
+	pgClient.query("SELECT uid, title, rating FROM (SELECT book_id, rating FROM UserRatings WHERE username LIKE $1 LIMIT 5) AS rates JOIN Books ON rates.book_id = Books.uid;", [username], (err, res) => {
 		if (err)	{
 			return err;
 		}
@@ -396,7 +400,7 @@ function profile(username, pres)	{
 	});
 
 	// 5 books commented on
-	pgClient.query("SELECT uid, title FROM (SELECT book_id FROM UserReview WHERE username LIKE '" + username + "' LIMIT 5) AS rates JOIN Books ON rates.book_id = Books.uid;", (err, res) => {
+	pgClient.query("SELECT uid, title FROM (SELECT book_id FROM UserReview WHERE username LIKE $1 LIMIT 5) AS rates JOIN Books ON rates.book_id = Books.uid;", [username], (err, res) => {
 		if (err)	{
 			return err;
 		}
@@ -411,7 +415,7 @@ function profile(username, pres)	{
 function changePassword(un, oldPW, newPW, pres)	{
 	var success = false;
 
-	pgClient.query("UPDATE Users SET password = '" + newPW + "' WHERE username LIKE '" + un + "' AND password LIKE '" + oldPW + "';", (err, res) => {
+	pgClient.query("UPDATE Users SET password = $3 WHERE username LIKE $1 AND password LIKE $2;", [un, oldPW, newPW], (err, res) => {
 		if (err)	{
 			return err;
 		}
@@ -426,7 +430,7 @@ function changePassword(un, oldPW, newPW, pres)	{
 function login(un, pw, pres)	{
 	var success = false;
 
-	pgClient.query("SELECT * FROM Users WHERE username LIKE '" + un + "' AND password LIKE '" + pw + "';", (err, res) => {
+	pgClient.query("SELECT * FROM Users WHERE username LIKE $1 AND password LIKE $2;", [un, pw], (err, res) => {
 		if (err)	{
 			return err;
 		}
@@ -443,7 +447,7 @@ function login(un, pw, pres)	{
 function makeUser(un, email, pw, pres)	{
 	var success = false;
 
-	pgClient.query("INSERT INTO Users VALUES ('" + un + "', '" + email + "', '" + pw + "');", (err, res) => {
+	pgClient.query("INSERT INTO Users VALUES ($1, $2, $3);", [un, email, pw], (err, res) => {
 		if (err)	{
 			return err;
 		}
@@ -479,7 +483,7 @@ function book(book_id, pres)	{
 
 
 	// author
-	pgClient.query("SELECT * FROM Writes WHERE uid = " + book_id + ";", (err, res) => {
+	pgClient.query("SELECT * FROM Writes WHERE uid = $1;", [book_id], (err, res) => {
 		if (err)	{
 			return err;
 		}
@@ -489,7 +493,7 @@ function book(book_id, pres)	{
 	});
 
 	// authorbday
-	pgClient.query("SELECT * FROM Authors JOIN (SELECT * FROM Writes WHERE uid = " + book_id + ") AS Book ON Authors.name = Book.name;", (err, res) => {
+	pgClient.query("SELECT * FROM Authors JOIN (SELECT * FROM Writes WHERE uid = $1) AS Book ON Authors.name = Book.name;", [book_id], (err, res) => {
 		if (err)	{
 			return err;
 		}
@@ -499,7 +503,7 @@ function book(book_id, pres)	{
 	});
 
 	// title and released
-	pgClient.query("SELECT * FROM Books WHERE uid = " + book_id + ";", (err, res) => {
+	pgClient.query("SELECT * FROM Books WHERE uid = $1;", [book_id], (err, res) => {
 		if (err)	{
 			return err;
 		}
@@ -511,7 +515,7 @@ function book(book_id, pres)	{
 	});
 
 	// wc, wps, awl
-	pgClient.query("SELECT * FROM BookWordAggregates WHERE uid = " + book_id + ";", (err, res) => {
+	pgClient.query("SELECT * FROM BookWordAggregates WHERE uid = $1;", [book_id], (err, res) => {
 		if (err)	{
 			return err;
 		}
@@ -534,7 +538,7 @@ function book(book_id, pres)	{
 	.then(resp => {
 		bookInfo.numDownloads = resp("*[itemprop = 'interactionCount']").text().split(" ")[0];
 
-		pgClient.query("INSERT INTO Downloads VALUES (" + book_id + ", " + bookInfo.numDownloads + ") ON CONFLICT (uid) DO UPDATE SET download = " + bookInfo.numDownloads + ";", (err, res) => {
+		pgClient.query("INSERT INTO Downloads VALUES ($1, $2) ON CONFLICT (uid) DO UPDATE SET download = $2;", [book_id, bookInfo.numDownloads], (err, res) => {
 			if (err)	{
 				return err;
 			}
@@ -542,7 +546,7 @@ function book(book_id, pres)	{
 	});
 
 	// avgRating
-	pgClient.query("SELECT CAST(AVG(rating) AS DECIMAL(10, 2)) AS rating FROM UserRatings WHERE book_id = " + book_id + ";", (err, res) => {
+	pgClient.query("SELECT CAST(AVG(rating) AS DECIMAL(10, 2)) AS rating FROM UserRatings WHERE book_id = $1;", [book_id],(err, res) => {
 		if (err)	{
 			return err;
 		}
@@ -552,7 +556,7 @@ function book(book_id, pres)	{
 	});
 
 	// numRatings
-	pgClient.query("SELECT COUNT(rating) AS rating FROM UserRatings WHERE book_id = " + book_id + ";", (err, res) => {
+	pgClient.query("SELECT COUNT(rating) AS rating FROM UserRatings WHERE book_id = $1;", [book_id], (err, res) => {
 		if (err)	{
 			return err;
 		}
@@ -562,7 +566,7 @@ function book(book_id, pres)	{
 	});
 
 	// commonWords
-	pgClient.query("SELECT * FROM CommonWords WHERE uid = " + book_id + " AND word NOT LIKE 'gutenberg' ORDER BY frequency DESC LIMIT 5;", (err, res) => {
+	pgClient.query("SELECT * FROM CommonWords WHERE uid = $1 AND word NOT LIKE 'gutenberg' ORDER BY frequency DESC LIMIT 5;", [book_id], (err, res) => {
 		if (err)	{
 			return err;
 		}
@@ -572,7 +576,7 @@ function book(book_id, pres)	{
 	});
 
 	// popularSequences
-	pgClient.query("SELECT * FROM Sequences WHERE uid = " + book_id + " ORDER BY times_appear DESC LIMIT 5;", (err, res) => {
+	pgClient.query("SELECT * FROM Sequences WHERE uid = $1 ORDER BY times_appear DESC LIMIT 5;", [book_id], (err, res) => {
 		if (err)	{
 			return err;
 		}
@@ -582,7 +586,7 @@ function book(book_id, pres)	{
 	});
 
 	// reviews
-	pgClient.query("SELECT * FROM UserReview WHERE book_id = " + book_id + ";", (err, res) => {
+	pgClient.query("SELECT * FROM UserReview WHERE book_id = $1;", [book_id], (err, res) => {
 		if (err)	{
 			return err;
 		}
@@ -592,7 +596,7 @@ function book(book_id, pres)	{
 	});
 
 	// similarBooks
-	pgClient.query("SELECT * FROM (SELECT uid2 FROM CosineSimilarity WHERE uid1 = " + book_id + " ORDER BY rank ASC LIMIT 5) AS sim JOIN Books on Books.uid = sim.uid2;", (err, res) => {
+	pgClient.query("SELECT * FROM (SELECT uid2 FROM CosineSimilarity WHERE uid1 = $1 ORDER BY rank ASC LIMIT 5) AS sim JOIN Books on Books.uid = sim.uid2;", [book_id], (err, res) => {
 		if (err)	{
 			return err;
 		}
@@ -602,7 +606,7 @@ function book(book_id, pres)	{
 	});
 
 	// similarAuthors
-	pgClient.query("SELECT * FROM (SELECT name FROM WRITES WHERE uid = " + book_id + ") AS w JOIN AuthorSimilarity ON w.name = AuthorSimilarity.author1 ORDER BY cos_similarity DESC LIMIT 5;", (err, res) => {
+	pgClient.query("SELECT * FROM (SELECT name FROM WRITES WHERE uid = $1) AS w JOIN AuthorSimilarity ON w.name = AuthorSimilarity.author1 ORDER BY cos_similarity DESC LIMIT 5;", [book_id], (err, res) => {
 		if (err)	{
 			return err;
 		}
@@ -617,7 +621,7 @@ function book(book_id, pres)	{
 function rate(un, uid, rating, pres)	{
 	var success = false;
 
-	pgClient.query("INSERT INTO UserRatings VALUES ('" + un + "', " + uid + ", " + rating + ", NOW()) ON CONFLICT (username, book_id) DO UPDATE SET rating = " + rating + ", timestamp = NOW();", (err, res) => {
+	pgClient.query("INSERT INTO UserRatings VALUES ($1, $2, $3, NOW()) ON CONFLICT (username, book_id) DO UPDATE SET rating = $3, timestamp = NOW();", [un, uid, rating], (err, res) => {
 		if (err)	{
 			return err;
 		}
@@ -632,7 +636,7 @@ function rate(un, uid, rating, pres)	{
 function review(un, uid, review, pres)	{
 	var success = false;
 
-	pgClient.query("INSERT INTO UserReview VALUES ('" + un + "', " + uid + ", '" + review + "', NOW()) ON CONFLICT (username, book_id) DO UPDATE SET review = '" + review + "', timestamp = NOW();", (err, res) => {
+	pgClient.query("INSERT INTO UserReview VALUES ($1, $2, $3, NOW()) ON CONFLICT (username, book_id) DO UPDATE SET review = $3, timestamp = NOW();", [un, uid, review], (err, res) => {
 		if (err)	{
 			return err;
 		}
