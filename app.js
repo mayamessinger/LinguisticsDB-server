@@ -264,15 +264,15 @@ function statistics(pres)	{
 		});
 		**/
 
-	// most common words
-	pgClient.query("select word, sum(frequency) from CommonWords group by word order by sum(frequency) desc limit 10;", (err, res) => {
-		if (err)	{
-			return err;
-		}
-		else	{
-			statsInfo.commonWordsInfo = res.rows;
-		}
-	});
+	// // most common words
+	// pgClient.query("select word, sum(frequency) as frequency from CommonWords WHERE word NOT LIKE 'gutenberg' group by word order by sum(frequency) desc limit 10;", (err, res) => {
+	// 	if (err)	{
+	// 		return err;
+	// 	}
+	// 	else	{
+	// 		statsInfo.commonWordsInfo = res.rows;
+	// 	}
+	// });
 
 	// most similar authors by cosine
 	pgClient.query("select author1, author2, cos_similarity from AuthorSimilarity order by cos_similarity desc limit 10;", (err, res) => {
@@ -283,8 +283,9 @@ function statistics(pres)	{
 			statsInfo.cosineAuthorsInfo = res.rows;
 		}
 	});
+
 	// most similar books by cosine
-	pgClient.query("select b1.title, b2.title, cos_similarity from CosineSimilarity, Books as b1, Books as b2 where cosinesimilarity.uid1 = b1.uid and cosinesimilarity.uid2 = b2.uid order by cos_similarity desc limit 10;", (err, res) => {
+	pgClient.query("SELECT * FROM (select b1.title as book1, b2.title as book2, cos_similarity from CosineSimilarity, Books as b1, Books as b2 where cosinesimilarity.uid1 = b1.uid and cosinesimilarity.uid2 = b2.uid order by cos_similarity desc LIMIT 20) AS np WHERE book1 <> book2 LIMIT 10;", (err, res) => {
 		if (err)	{
 			return err;
 		}
@@ -303,15 +304,15 @@ function statistics(pres)	{
 		}
 	});
 
-	// most popular sequences
-	pgClient.query("select word, next_word, sum(times_appear) from Sequences group by word, next_word order by sum(times_appear) desc limit 10;", (err, res) => {
-		if (err)	{
-			return err;
-		}
-		else	{
-			statsInfo.sequencesInfo = res.rows;
-		}
-	});
+	// // most popular sequences
+	// pgClient.query("select word, next_word, sum(times_appear) as times_appear from Sequences group by word, next_word order by times_appear desc limit 10;", (err, res) => {
+	// 	if (err)	{
+	// 		return err;
+	// 	}
+	// 	else	{
+	// 		statsInfo.sequencesInfo = res.rows;
+	// 	}
+	// });
 
 	// best rated books
 	pgClient.query("select title, CAST(avg(rating) AS DECIMAL(10, 2)) as rating FROM UserRatings, Books where UserRatings.book_id=Books.uid group by uid order by rating desc limit 10;", (err, res) => {
@@ -344,7 +345,7 @@ function statistics(pres)	{
 	});
 
 	// total reviews
-	pgClient.query("select count(*) from UserReview", (err, res) => {
+	pgClient.query("select count(*) from UserReview;", (err, res) => {
 		if (err)	{
 			return err;
 		}
@@ -363,7 +364,7 @@ function statistics(pres)	{
 		}
 	});
 
-	setTimeout(function() {pres.send(statsInfo)}, 1000);
+	setTimeout(function() {pres.send(statsInfo)}, 11000);
 }
 
 function profile(username, pres)	{
@@ -560,15 +561,15 @@ function book(book_id, pres)	{
 		}
 	});
 
-	// // commonWords
-	// pgClient.query("SELECT * FROM CommonWords WHERE uid = " + book_id + " ORDER BY frequency DESC LIMIT 5;", (err, res) => {
-	// 	if (err)	{
-	// 		return err;
-	// 	}
-	// 	else	{
-	// 		bookInfo.popularWords = res.rows;
-	// 	}
-	// });
+	// commonWords
+	pgClient.query("SELECT * FROM CommonWords WHERE uid = " + book_id + " AND word NOT LIKE 'gutenberg' ORDER BY frequency DESC LIMIT 5;", (err, res) => {
+		if (err)	{
+			return err;
+		}
+		else	{
+			bookInfo.popularWords = res.rows;
+		}
+	});
 
 	// // popularSequences
 	// pgClient.query("SELECT * FROM Sequences WHERE uid = " + book_id + " ORDER BY times_appear DESC LIMIT 5;", (err, res) => {
@@ -590,25 +591,25 @@ function book(book_id, pres)	{
 		}
 	});
 
-	// // similarBooks
-	// pgClient.query("SELECT * FROM CosineSimilarity WHERE uid1 = " + book_id + " ORDER BY rank ASC LIMIT 5;", (err, res) => {
-	// 	if (err)	{
-	// 		return err;
-	// 	}
-	// 	else	{
-	// 		bookInfo.similarBooks = res.rows;
-	// 	}
-	// });
+	// similarBooks
+	pgClient.query("SELECT * FROM (SELECT uid2 FROM CosineSimilarity WHERE uid1 = " + book_id + " ORDER BY rank ASC LIMIT 5) AS sim JOIN Books on Books.uid = sim.uid2;", (err, res) => {
+		if (err)	{
+			return err;
+		}
+		else	{
+			bookInfo.similarBooks = res.rows;
+		}
+	});
 
-	// // similarAuthors
-	// pgClient.query("SELECT * FROM AuthorSimilarity WHERE author LIKE '" + bookInfo.author + "' ORDER BY rank ASC LIMIT 5;", (err, res) => {
-	// 	if (err)	{
-	// 		return err;
-	// 	}
-	// 	else	{
-	// 		bookInfo.similarAuthors = res.rows;
-	// 	}
-	// });
+	// similarAuthors
+	pgClient.query("SELECT * FROM (SELECT name FROM WRITES WHERE uid = " + book_id + ") AS w JOIN AuthorSimilarity ON w.name = AuthorSimilarity.author1 ORDER BY cos_similarity DESC LIMIT 5;", (err, res) => {
+		if (err)	{
+			return err;
+		}
+		else	{
+			bookInfo.similarAuthors = res.rows;
+		}
+	});
 
 	setTimeout(function() {pres.send(bookInfo)}, 500);
 }
