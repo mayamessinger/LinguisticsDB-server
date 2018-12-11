@@ -148,11 +148,46 @@ function basicSearch(st, sf, pres)	{
 }
 
 function advancedSearch(args, pres)	{
-	pgClient.query("SELECT books.title, books.link_to_book, authors.name, bookwordaggregates.total_count, CAST(avg(userratings.rating) AS DECIMAL(10, 2)) AS rating FROM books FULL OUTER JOIN writes ON books.uid = writes.uid FULL OUTER JOIN authors ON authors.name = writes.name FULL OUTER JOIN authorsimilarity ON authors.name=authorsimilarity.author1 FULL OUTER JOIN bookwordaggregates ON books.uid = bookwordaggregates.uid FULL OUTER JOIN commonwords ON books.uid=commonwords.uid FULL OUTER JOIN cosinesimilarity ON books.uid=cosinesimilarity.uid1 FULL OUTER JOIN downloads ON books.uid = downloads.uid FULL OUTER JOIN userratings ON books.uid = userratings.book_id where books.title ILIKE '%"  + args.titleLike + "%' and authors.name ILIKE '%"  + args.authorLike + "%' and authors.birthdate > "  + args.bdLow + " and authors.birthdate < "  + args.bdHigh + " and bookwordaggregates.per_sentence > " + args.wpsLow + " and bookwordaggregates.per_sentence < "  + args.wpsHigh + " and bookwordaggregates.total_count > "  + args.wcLow + " and bookwordaggregates.total_count < "  + args.wcHigh + " and bookwordaggregates.avg_word_length > "  + args.wlLow + " and bookwordaggregates.avg_word_length < "  + args.wlHigh + " group by books.title, books.link_to_book, authors.name, bookwordaggregates.total_count;", (err, res) => {
+	var query = "SELECT books.title, books.link_to_book, authors.name, bookwordaggregates.total_count, avg(userratings.rating) AS rating FROM books FULL OUTER JOIN writes ON books.uid = writes.uid FULL OUTER JOIN authors ON authors.name = writes.name FULL OUTER JOIN authorsimilarity ON authors.name=authorsimilarity.author1 FULL OUTER JOIN bookwordaggregates ON books.uid = bookwordaggregates.uid FULL OUTER JOIN commonwords ON books.uid=commonwords.uid FULL OUTER JOIN cosinesimilarity ON books.uid=cosinesimilarity.uid1 FULL OUTER JOIN downloads ON books.uid = downloads.uid FULL OUTER JOIN userratings ON books.uid = userratings.book_id where books.title ILIKE '%"  + args.titleLike + "%' and authors.name ILIKE '%"  + args.authorLike + "%' and authors.birthdate > "  + args.bdLow + " and authors.birthdate < "  + args.bdHigh + " and bookwordaggregates.per_sentence > " + args.wpsLow + " and bookwordaggregates.per_sentence < "  + args.wpsHigh + " and bookwordaggregates.total_count > "  + args.wcLow + " and bookwordaggregates.total_count < "  + args.wcHigh + " and bookwordaggregates.avg_word_length > "  + args.wlLow + " and bookwordaggregates.avg_word_length < "  + args.wlHigh;
+
+	if (args.freqWords)	{
+		args.freqWords.split(",").forEach(word =>	{
+			word = word.trim();
+
+			query += " AND CommonWords.word LIKE '%" + word + "%'";
+		});
+	}
+
+	if (args.wordsContained)	{
+		args.wordsContained.split(",").forEach(word => {
+			word = word.trim();
+
+			query += " AND Sequences.word LIKE '%" + word + "%'";
+		});
+	}
+
+	if (args.similarTo)	{
+		query += " AND CosineSimilarity.uid2 = " + args.similarTo;
+	}
+
+	query += " group by books.title, books.link_to_book, authors.name, bookwordaggregates.total_count;";
+
+	pgClient.query(query, (err, res) => {
 			if (err)	{
 				return err;
 			}
 			else	{
+				res.rows.forEach(row => {
+					if (row.rating !== null && (row.rating < args.rateLow || row.rating > args.rateHigh))	{
+						res.rows.splice(res.rows.indexOf(row), 1);
+						return;
+					}
+					if (row.download !== null && (row.download < args.dcLow || row.rating > args.dcHigh))	{
+						res.rows.splice(res.rows.indexOf(row), 1);
+						return;
+					}
+				});
+
 		  	pres.send(res.rows);	// .uid, .title, etc. to access columns
 		  }
 	});
@@ -289,7 +324,7 @@ function statistics(pres)	{
 	});
 
 	// books with most ratings
-	pgClient.query("select title, count(*) from Books, UserReview where Books.uid=UserReview.book_id group by uid order by count(*) desc limit 10;", (err, res) => {
+	pgClient.query("select title, count(*) from Books, UserRatings where Books.uid=UserRatings.book_id group by uid order by count(*) desc limit 10;", (err, res) => {
 		if (err)	{
 			return err;
 		}
@@ -423,6 +458,7 @@ function book(book_id, pres)	{
 	bookInfo = {
 		book_id: book_id,
 		title: null,
+		link_to_book: null,
 		author: null,
 		authorbday: null,
 		released: null,
@@ -468,6 +504,7 @@ function book(book_id, pres)	{
 		}
 		else	{
 			bookInfo.title = res.rows[0].title;
+			bookInfo.link_to_book = res.rows[0].link_to_book;
 			bookInfo.released = res.rows[0].date_published;
 		}
 	});

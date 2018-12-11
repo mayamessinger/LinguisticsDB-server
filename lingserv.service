@@ -1,0 +1,17 @@
+[Unit]
+Description=Node.js Example Server
+
+[Service]
+ExecStart=/usr/bin/node /home/server/app.js
+WorkingDirectory=/home/server/
+Restart=always
+ # Restart service after 10 seconds if node service crashes
+ RestartSec=10
+# Output to syslog
+StandardOutput=syslog
+StandardError=syslog
+SyslogIdentifier=nodejs-example
+Environment=NODE_ENV=production PORT=3001
+
+[Install]
+WantedBy=multi-user.target
