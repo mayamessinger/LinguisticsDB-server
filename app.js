@@ -148,35 +148,43 @@ function basicSearch(st, sf, pres)	{
 function advancedSearch(args, pres)	{
 	var values = ["%" + args.titleLike + "%", "%" + args.authorLike + "%", args.bdLow, args.bdHigh, args.wpsLow, args.wpsHigh, args.wcLow, args.wcHigh, args.wlLow, args.wlHigh];
 
-	var query = "SELECT books.title, books.link_to_book, authors.name, bookwordaggregates.total_count, avg(userratings.rating) AS rating FROM books FULL OUTER JOIN writes ON books.uid = writes.uid FULL OUTER JOIN authors ON authors.name = writes.name FULL OUTER JOIN authorsimilarity ON authors.name=authorsimilarity.author1 FULL OUTER JOIN bookwordaggregates ON books.uid = bookwordaggregates.uid FULL OUTER JOIN commonwords ON books.uid=commonwords.uid FULL OUTER JOIN cosinesimilarity ON books.uid=cosinesimilarity.uid1 FULL OUTER JOIN downloads ON books.uid = downloads.uid FULL OUTER JOIN userratings ON books.uid = userratings.book_id where books.title ILIKE $1 and authors.name ILIKE $2 and authors.birthdate > $3 and authors.birthdate < $4 and bookwordaggregates.per_sentence > $5 and bookwordaggregates.per_sentence < $6 and bookwordaggregates.total_count > $7 and bookwordaggregates.total_count < $8 and bookwordaggregates.avg_word_length > $9 and bookwordaggregates.avg_word_length < $10;"
+	var query = "SELECT books.uid, books.title, books.link_to_book, authors.name, bookwordaggregates.total_count, avg(userratings.rating) as rating FROM books FULL OUTER JOIN writes ON books.uid = writes.uid FULL OUTER JOIN authors ON authors.name = writes.name FULL OUTER JOIN bookwordaggregates ON books.uid = bookwordaggregates.uid FULL OUTER JOIN downloads ON books.uid = downloads.uid FULL OUTER JOIN userratings ON books.uid = userratings.book_id";
+
+	if (args.wordsContained)	{
+		query += " FULL OUTER JOIN commonwords ON books.uid=commonwords.uid";
+	}
+
+	if (args.similarTo)	{
+		query += " FULL OUTER JOIN cosinesimilarity ON books.uid=cosinesimilarity.uid1";
+	}
+
+	query += " where books.title ILIKE $1 and authors.name ILIKE $2 and authors.birthdate > $3 and authors.birthdate < $4 and bookwordaggregates.per_sentence > $5 and bookwordaggregates.per_sentence < $6 and bookwordaggregates.total_count > $7 and bookwordaggregates.total_count < $8 and bookwordaggregates.avg_word_length > $9 and bookwordaggregates.avg_word_length < $10";
 
 	if (args.freqWords)	{
 		args.freqWords.split(",").forEach(word =>	{
-			word = "%" + word.trim() + "%";
-			values.push(word);
+			values.push(word.trim());
 
-			query += " AND CommonWords.word LIKE $" + values.length;
+			query += " AND CommonWords.word ILIKE $" + values.length;
 		});
 	}
 
 	if (args.wordsContained)	{
 		args.wordsContained.split(",").forEach(word => {
-			word = "%" + word.trim() + "%";
-			values.push(word);
+			values.push(word.trim());
 
-			query += " AND Sequences.word LIKE $" + values.length;
+			query += " AND CommonWords.word ILIKE $" + values.length;
 		});
 	}
 
 	if (args.similarTo)	{
-		values.push(args.similarTo);
+		values.push(args.similarTo.trim());
 
 		query += " AND CosineSimilarity.uid2 = $" + values.length;
 	}
 
-	query += " group by books.title, books.link_to_book, authors.name, bookwordaggregates.total_count;";
+	query += " group by books.uid, books.title, books.link_to_book, authors.name, bookwordaggregates.total_count;";
 
-	pgClient.query(query, (err, res) => {
+	pgClient.query(query, values, (err, res) => {
 			if (err)	{
 				return err;
 			}
@@ -409,7 +417,7 @@ function profile(username, pres)	{
 		}
 	});
 
-	setTimeout(function() {pres.send(profileInfo)}, 2000);
+	setTimeout(function() {pres.send(profileInfo)}, 1000);
 }
 
 function changePassword(un, oldPW, newPW, pres)	{
@@ -424,7 +432,7 @@ function changePassword(un, oldPW, newPW, pres)	{
 		}
 	});
 
-	setTimeout(function() {pres.send(success)}, 2000);
+	setTimeout(function() {pres.send(success)}, 1000);
 }
 
 function login(un, pw, pres)	{
@@ -441,7 +449,7 @@ function login(un, pw, pres)	{
 		}
 	});
 
-	setTimeout(function() {pres.send(success)}, 2000);
+	setTimeout(function() {pres.send(success)}, 1000);
 }
 
 function makeUser(un, email, pw, pres)	{
@@ -456,7 +464,7 @@ function makeUser(un, email, pw, pres)	{
 		}
 	});
 
-	setTimeout(function() {pres.send(success)}, 2000);
+	setTimeout(function() {pres.send(success)}, 1000);
 }
 
 function book(book_id, pres)	{
@@ -615,7 +623,7 @@ function book(book_id, pres)	{
 		}
 	});
 
-	setTimeout(function() {pres.send(bookInfo)}, 2000);
+	setTimeout(function() {pres.send(bookInfo)}, 1000);
 }
 
 function rate(un, uid, rating, pres)	{
